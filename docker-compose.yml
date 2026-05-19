@@ -1,0 +1,23 @@
+services:
+  mysql:
+    image: mysql:9.7
+    platform: linux/x86_64
+    restart: unless-stopped
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+      MYSQL_DATABASE: nestjs-realworld-example
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - mysql:/var/lib/mysql
+
+volumes:
+  mysql:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

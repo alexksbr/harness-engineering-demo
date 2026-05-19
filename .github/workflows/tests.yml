@@ -1,0 +1,56 @@
+name: tests
+
+on:
+  push:
+    branches: [master, v7, renovate/**]
+  pull_request:
+
+jobs:
+  test:
+    name: Tests
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24]
+    steps:
+      - name: Checkout Source code
+        uses: actions/checkout@v6
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Enable corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@stable --activate
+
+      - name: Init docker
+        run: docker compose up -d --wait
+
+      - name: Install
+        run: yarn
+
+      - name: Configure
+        run: |
+          cp src/config.ts.example src/config.ts
+          cp src/mikro-orm.config.ts.example src/mikro-orm.config.ts
+          yarn mikro-orm migration:up
+
+      - name: Test
+        run: |
+          yarn test
+
+      - name: E2E tests
+        run: |
+          yarn start &
+          sleep 30
+          cd e2e
+          APIURL=http://localhost:3000/api ./run-api-tests.sh
+          exit 0
+
+      - name: Teardown docker
+        run: docker compose down
