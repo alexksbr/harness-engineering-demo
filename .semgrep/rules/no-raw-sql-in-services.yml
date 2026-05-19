@@ -23,30 +23,28 @@ rules:
       include:
         - /src/**/*.service.ts
     pattern-either:
+      # em.getConnection() — flagged as the entry point itself.
+      # No legitimate reason for a service to reach for the raw Connection.
       - patterns:
-          - pattern: $EM.getConnection().execute(...)
+          - pattern: $EM.getConnection()
           - metavariable-regex:
               metavariable: $EM
               regex: ^(this\.)?em$
-      - patterns:
-          - pattern: $EM.getConnection().query(...)
-          - metavariable-regex:
-              metavariable: $EM
-              regex: ^(this\.)?em$
+      # em.execute(...) with or without generic type arguments.
       - patterns:
           - pattern: $EM.execute(...)
           - metavariable-regex:
               metavariable: $EM
               regex: ^(this\.)?em$
-      - pattern: $EM.getKnex().raw(...)
+      - patterns:
+          - pattern: $EM.execute<$T>(...)
+          - metavariable-regex:
+              metavariable: $EM
+              regex: ^(this\.)?em$
+      # em.getKnex() — entry point to raw Knex queries.
+      - patterns:
+          - pattern: $EM.getKnex()
+          - metavariable-regex:
+              metavariable: $EM
+              regex: ^(this\.)?em$
       - pattern: getKnex().raw(...)
-      - patterns:
-          - pattern-inside: |
-              const $KNEX = $EM.getKnex();
-              ...
-          - pattern: $KNEX.raw(...)
-      - patterns:
-          - pattern-inside: |
-              let $KNEX = $EM.getKnex();
-              ...
-          - pattern: $KNEX.raw(...)
