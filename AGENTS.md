@@ -98,3 +98,21 @@ When a sensor reports a violation:
 3. If a rule genuinely seems wrong for a specific case, surface this in
    the PR description. Rules evolve through discussion, not silent
    exceptions.
+
+---
+
+# When to run sensors
+
+Run sensors as part of your normal task loop:
+
+1. **Before declaring a task complete**, run `yarn check:all`. Address every
+   finding before you finish. Do not mark a task done while any sensor reports
+   a violation.
+2. After non-trivial changes (new endpoints, controller/service/entity edits),
+   run `yarn check:all` early to catch regressions before they pile up.
+3. `yarn check:structure` and `yarn check:bounds` are fast (~1s each) — run
+   them freely.
+4. `yarn check:policy` is slower (~5–15s) and costs API tokens — run it once
+   per logical change, not on every save.
+5. The pre-commit hook enforces `check:structure` and `check:bounds` on every
+   commit. Do not bypass it with `--no-verify`.
