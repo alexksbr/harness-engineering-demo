@@ -1,8 +1,17 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from '../user/user.entity';
-import { IProfileData, IProfileRO } from './profile.interface';
-import { EntityManager, FilterQuery, serialize } from '@mikro-orm/mysql';
+import { IProfileData, IProfileRO, ITopProfileData, ITopProfilesRO } from './profile.interface';
+import { EntityManager, FilterQuery, QueryOrder, raw, serialize } from '@mikro-orm/mysql';
 import { UserRepository } from '../user/user.repository';
+
+const TOP_PROFILES_LIMIT_MAX = 100;
+
+type TopProfileRow = {
+  username: string;
+  bio: string;
+  image?: string;
+  followersCount: number | string;
+};
 
 @Injectable()
 export class ProfileService {
@@ -18,6 +27,26 @@ export class ProfileService {
   async findOne(where: FilterQuery<User>): Promise<IProfileRO> {
     const user = await this.userRepository.findOneOrFail(where);
     return { profile: serialize(user, { exclude: ['id', 'password'] }) };
+  }
+
+  async findTop(limit: number): Promise<ITopProfilesRO> {
+    const rows = await this.userRepository
+      .createQueryBuilder('u')
+      .select(['u.username', 'u.bio', 'u.image', raw('count(f.id) as followersCount')])
+      .leftJoin('u.followers', 'f')
+      .groupBy(['u.id', 'u.username', 'u.bio', 'u.image'])
+      .orderBy({ followersCount: QueryOrder.DESC, username: QueryOrder.ASC })
+      .limit(Math.min(Math.max(limit, 1), TOP_PROFILES_LIMIT_MAX))
+      .execute<TopProfileRow[]>();
+
+    const profiles: ITopProfileData[] = rows.map(row => ({
+      bio: row.bio,
+      followersCount: Number(row.followersCount),
+      image: row.image,
+      username: row.username,
+    }));
+
+    return { profiles, profilesCount: profiles.length };
   }
 
   async findProfile(id: number, followingUsername: string): Promise<IProfileRO> {
