@@ -29,7 +29,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "APIURL=http://localhost:3000/api ./e2e/run-api-tests.sh"
+    "test:e2e": "APIURL=http://localhost:3000/api ./e2e/run-api-tests.sh",
+    "prepare": "husky"
   },
   "dependencies": {
     "@mikro-orm/core": "^7.0.6",
@@ -77,6 +78,7 @@
     "atob": ">=2.1.2",
     "deep-extend": ">=0.6.0",
     "extend": ">=3.0.2",
+    "husky": "9.1.7",
     "oxfmt": "^0.50.0",
     "oxlint": "^1.33.0",
     "oxlint-tsgolint": "^0.23.0",

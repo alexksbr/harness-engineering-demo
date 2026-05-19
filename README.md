@@ -75,6 +75,15 @@ used and `K6_BASE_URL` is unset, the runner targets
 `PERF_USER` and `PERF_PASS` if the default credentials `test@test.com` /
 `test1234` do not exist in your database.
 
+### Lifecycle integration
+
+- Pre-commit: `check:structure` and `check:bounds` run automatically on every
+  commit (via Husky). Bypass with `--no-verify` only in genuine emergencies -
+  see `AGENTS.md` "How to handle sensor feedback".
+- On-demand: run the full suite with `yarn check:all`.
+- Inferential and runtime sensors (`check:policy`, `perf:profiles`) are NOT in
+  pre-commit - they're slower and intended for CI or manual invocation.
+
 ---
 
 ## API Specification
