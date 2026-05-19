@@ -1,7 +1,7 @@
-import { Controller, Delete, Get, HttpCode, Param, Post } from '@nestjs/common';
+import { Controller, DefaultValuePipe, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { User } from '../user/user.decorator';
-import { IProfileRO } from './profile.interface';
+import { IProfileRO, ITopProfilesRO } from './profile.interface';
 import { ProfileService } from './profile.service';
 
 @ApiBearerAuth()
@@ -9,6 +9,11 @@ import { ProfileService } from './profile.service';
 @Controller('profiles')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
+
+  @Get('top')
+  async getTopProfiles(@Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number): Promise<ITopProfilesRO> {
+    return this.profileService.findTopProfiles(limit);
+  }
 
   @Get(':username')
   async getProfile(@User('id') userId: number, @Param('username') username: string): Promise<IProfileRO> {

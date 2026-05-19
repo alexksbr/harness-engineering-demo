@@ -1,8 +1,16 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from '../user/user.entity';
-import { IProfileData, IProfileRO } from './profile.interface';
+import { IProfileData, IProfileRO, ITopProfilesRO } from './profile.interface';
 import { EntityManager, FilterQuery, serialize } from '@mikro-orm/mysql';
 import { UserRepository } from '../user/user.repository';
+
+interface TopProfileRow {
+  username: string;
+  bio: string;
+  image: string;
+  followerCount: number | string | bigint;
+  email: string;
+}
 
 @Injectable()
 export class ProfileService {
@@ -18,6 +26,41 @@ export class ProfileService {
   async findOne(where: FilterQuery<User>): Promise<IProfileRO> {
     const user = await this.userRepository.findOneOrFail(where);
     return { profile: serialize(user, { exclude: ['id', 'password'] }) };
+  }
+
+  async findTopProfiles(limit = 10): Promise<ITopProfilesRO> {
+    const normalizedLimit = Math.trunc(limit);
+
+    if (!Number.isFinite(normalizedLimit) || normalizedLimit < 1) {
+      throw new BadRequestException('Limit must be a positive integer.');
+    }
+
+    const rows = await this.em.getConnection().execute<TopProfileRow[]>(
+      `
+        SELECT
+          u.username,
+          u.bio,
+          u.image,
+          u.email,
+          COUNT(utf.following) AS followerCount
+        FROM \`user\` u
+        LEFT JOIN \`user_to_follower\` utf ON utf.follower = u.id
+        GROUP BY u.id, u.username, u.bio, u.image, u.email
+        ORDER BY followerCount DESC, u.username ASC
+        LIMIT ?
+      `,
+      [normalizedLimit],
+    );
+
+    return {
+      profiles: rows.map(row => ({
+        username: row.username,
+        bio: row.bio,
+        image: row.image,
+        followerCount: Number(row.followerCount),
+        email: row.email,
+      })),
+    };
   }
 
   async findProfile(id: number, followingUsername: string): Promise<IProfileRO> {
