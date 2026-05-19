@@ -21,6 +21,11 @@
     "tsc-check-tests": "tsc --noEmit --project tsconfig.json",
     "format": "oxfmt --write .",
     "lint": "oxlint --type-aware",
+    "check:structure": "scripts/check-structure.sh",
+    "check:bounds": "scripts/check-bounds.sh",
+    "check:policy": "node tools/llm-judge.mjs",
+    "check:all": "yarn check:structure && yarn check:bounds && yarn check:policy",
+    "perf:profiles": "scripts/run-k6.sh tests/perf/profiles-top.k6.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -52,6 +57,7 @@
     "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.97.0",
     "@mikro-orm/cli": "^7.0.6",
     "@mikro-orm/seeder": "^7.0.6",
     "@nestjs/cli": "^11.0.2",

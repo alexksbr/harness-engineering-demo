@@ -1,0 +1,52 @@
+rules:
+  - id: no-raw-sql-in-services
+    languages:
+      - typescript
+    severity: ERROR
+    message: |
+      no-raw-sql-in-services: Raw SQL in service layer is forbidden.
+      Why: services that hardcode table names and column names break silently when
+      entities are renamed or migrations change the schema. The repository
+      layer exists to absorb those changes.
+      Fix:
+        1. Identify the entity you need: see src/<module>/<module>.entity.ts.
+        2. Add or extend a repository method in src/<module>/<module>.repository.ts.
+           For non-trivial queries, use the typed QueryBuilder:
+             this.em.createQueryBuilder(YourEntity, 'alias')
+               .select(...)
+               .leftJoin(...)
+               .orderBy(...)
+               .limit(limit);
+        3. Inject the repository into your service and call the new method.
+      Do not silence this rule with `// nosemgrep` or by moving the SQL elsewhere.
+    paths:
+      include:
+        - /src/**/*.service.ts
+    pattern-either:
+      - patterns:
+          - pattern: $EM.getConnection().execute(...)
+          - metavariable-regex:
+              metavariable: $EM
+              regex: ^(this\.)?em$
+      - patterns:
+          - pattern: $EM.getConnection().query(...)
+          - metavariable-regex:
+              metavariable: $EM
+              regex: ^(this\.)?em$
+      - patterns:
+          - pattern: $EM.execute(...)
+          - metavariable-regex:
+              metavariable: $EM
+              regex: ^(this\.)?em$
+      - pattern: $EM.getKnex().raw(...)
+      - pattern: getKnex().raw(...)
+      - patterns:
+          - pattern-inside: |
+              const $KNEX = $EM.getKnex();
+              ...
+          - pattern: $KNEX.raw(...)
+      - patterns:
+          - pattern-inside: |
+              let $KNEX = $EM.getKnex();
+              ...
+          - pattern: $KNEX.raw(...)

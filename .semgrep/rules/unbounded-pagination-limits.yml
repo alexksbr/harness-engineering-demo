@@ -1,0 +1,52 @@
+rules:
+  - id: unbounded-pagination-limits
+    languages:
+      - typescript
+    severity: ERROR
+    message: |
+      unbounded-pagination-limits: A `limit` query parameter is accepted without an enforced upper bound.
+      Why: unbounded inputs are DoS vectors. A request with `?limit=999999999`
+      can degrade or crash the service even if the database is healthy.
+      Fix (choose one):
+        1. Service-level clamp: at the top of the service call, write
+             const safeLimit = Math.min(Math.max(limit, 1), MAX_LIMIT);
+           Recommended MAX_LIMIT: 100 for list/aggregate endpoints,
+           50 for bulk-mutation endpoints.
+        2. DTO-based bound: define a Dto with class-validator and apply
+           `@Max(100)` and `@Min(1)` to the limit field, then use it via
+           `ValidationPipe`.
+      Do not silence this rule with `// nosemgrep` or by widening the bound
+      beyond the recommended maximum without team discussion.
+    paths:
+      include:
+        - /src/**/*.controller.ts
+    # Heuristic by design: custom Pipes that encode bounds, aliases around
+    # Math.min, and deeply nested clamps may produce false positives. That
+    # tradeoff is acceptable for this demo sensor because it keeps findings
+    # simple and agent-actionable.
+    patterns:
+      - pattern: |
+          $METHOD(..., @Query('limit', ...) $NAME: number, ...) {
+            ...
+          }
+      - focus-metavariable: $NAME
+      - pattern-not-inside: |
+          $METHOD(..., @Query('limit', ...) $NAME: number, ...) {
+            ...
+            Math.min($NAME, $MAX)
+            ...
+          }
+      - pattern-not-inside: |
+          $METHOD(..., @Query('limit', ...) $NAME: number, ...) {
+            ...
+            Math.min(Math.max($NAME, $MIN), $MAX)
+            ...
+          }
+      - pattern-not-inside: |
+          $METHOD(..., @Max(...) @Query('limit', ...) $NAME: number, ...) {
+            ...
+          }
+      - pattern-not-inside: |
+          $METHOD(..., @Query('limit', ...) @Max(...) $NAME: number, ...) {
+            ...
+          }

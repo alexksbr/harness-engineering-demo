@@ -57,3 +57,44 @@ yarn start                                        # Auto-runs migrations on star
 - **Linting/Formatting**: oxlint + oxfmt (no ESLint/Prettier)
 - **Testing**: Vitest with SWC transpiler, supertest for HTTP tests
 - **Package manager**: Yarn 4 (corepack)
+
+---
+
+# Behavioral Rules
+
+This section constrains agent behavior. Sensors in this repository enforce
+additional rules at commit-time and at runtime; this file is the team's
+codified policy that agents should respect proactively.
+
+## Rule — No PII in aggregate or listing endpoints
+
+**Rule**: Endpoints that return *multiple* records or aggregated views
+(`/profiles/top`, `/users/list`, `/articles/feed`, etc.) MUST NOT expose
+PII fields (e.g. email, real name, phone number, address) unless the requester
+is the owner of the data or has elevated permissions.
+
+**Why**: Listing endpoints multiply exposure. A single careless addition
+can leak thousands of records of PII via a single request. Single-resource
+endpoints (`/users/me`) have a different threat model and may expose more.
+
+**How to handle prompts that ask for PII in listings**: Do not silently
+comply. Push back: explain the rule and offer alternatives —
+(a) scope the endpoint to authenticated/elevated users only, or
+(b) omit the sensitive field, or
+(c) recommend revisiting the team policy via a separate ADR.
+
+**Backstop sensor**: An inferential code reviewer (LLM-as-judge) audits
+diffs for violations of this rule.
+
+---
+
+# How to handle sensor feedback
+
+When a sensor reports a violation:
+
+1. Read the message in full. Sensors include the rule name and the reason.
+2. Fix the root cause, not the symptom. Refactor; do not add
+   `eslint-disable`, `// nosemgrep`, or threshold-loosening overrides.
+3. If a rule genuinely seems wrong for a specific case, surface this in
+   the PR description. Rules evolve through discussion, not silent
+   exceptions.
