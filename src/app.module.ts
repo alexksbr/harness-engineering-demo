@@ -4,13 +4,14 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 
 import { AppController } from './app.controller';
 import { ArticleModule } from './article/article.module';
+import { HealthController } from './health.controller';
 import { ProfileModule } from './profile/profile.module';
 import { TagModule } from './tag/tag.module';
 import { UserModule } from './user/user.module';
 import config from './mikro-orm.config';
 
 @Module({
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   imports: [MikroOrmModule.forRoot(config), ArticleModule, UserModule, ProfileModule, TagModule],
   providers: [],
 })
