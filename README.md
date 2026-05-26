@@ -1,5 +1,9 @@
 # ![NestJS](project-logo.png)
 
+This repo is a companion for the talk ["Architekturziele für Coding Agents mit Harness Engineering"](https://speakerdeck.com/alexksbr/architekturziele-fur-coding-agents-mit-harness-engineering).
+
+The branch [experiment/preflight-no-harness](https://github.com/alexksbr/harness-engineering-demo/tree/experiment/preflight-no-harness) shows the results the coding agent produced without an outer harness. [experiment/with-harness](https://github.com/alexksbr/harness-engineering-demo/tree/experiment/with-harness) shows the guides and sensors, while [experiment/with-harness-run](https://github.com/alexksbr/harness-engineering-demo/tree/experiment/with-harness-run) shows the result the coding agent produces with this outer harness.
+
 > ### NestJS + MikroORM codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld-example-apps) API spec.
 
 > Extended with Harness Engineering components. Based on https://github.com/mikro-orm/nestjs-realworld-example-app (MIT).
